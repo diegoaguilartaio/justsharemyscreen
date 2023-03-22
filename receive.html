@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Receive Screen Share</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        #remoteVideo {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            z-index: -1;
+        }
+        #startButton {
+            z-index: 100;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="shareButtonContainer">
+        <button class="shareButton" id="startButton" onclick="start()">Start</button>
+    </div>
+    <video id="remoteVideo" autoplay></video>
+    <canvas id="canvas" width="10" height="10"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.3.2/dist/peerjs.min.js"></script>
+    <script>
+        function start() {
+            const startButton = document.getElementById("startButton");
+            startButton.style.display = "none";
+            const peer = new Peer();
+
+            peer.on("open", () => {
+                console.log("Peer Openned");
+                const id = getUrlParameter("id");
+                console.log(id)
+                console.log("calling: " + id);
+
+                let canvasStream = document.getElementById("canvas").captureStream(30);
+                const call = peer.call(id, canvasStream);
+
+                console.log("call: " + call);
+                if (call) {
+                    console.log("adding callback");
+                    call.on('stream', (stream) => {
+                        console.log("stream received", stream);
+                        const video = document.getElementById("remoteVideo");
+                        video.srcObject = stream;
+                        video.play();
+                    });
+                }
+            });
+
+        }
+
+
+        function getUrlParameter(name) {
+            name = name.replace(/[[]]/g, "\\$&");
+            const regex = new RegExp(`[?&]${name}(=([^&#]*)|&|#|$)`);
+            const results = regex.exec(window.location.href);
+            if (!results) return null;
+            if (!results[2]) return "";
+            return decodeURIComponent(results[2].replace(/\+/g, " "));
+        }
+    </script>
+</body>
+
+</html>
